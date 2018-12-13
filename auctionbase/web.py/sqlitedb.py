@@ -55,3 +55,9 @@ def query(query_string, vars = {}):
 
 #TODO: additional methods to interact with your database,
 # e.g. to update the current time
+
+# sets the current time 
+def setTime(time):
+    query_string = 'UPDATE CurrentTime SET Time = $time'
+    db.query(query_string, {'time': time})
+    return

@@ -89,7 +89,11 @@ class select_time:
         selected_time = '%s-%s-%s %s:%s:%s' % (yyyy, MM, dd, HH, mm, ss)
         update_message = '(Hello, %s. Previously selected time was: %s.)' % (enter_name, selected_time)
         # TODO: save the selected time as the current time in the database
-
+        try:
+            sqlitedb.setTime(selected_time)
+        except:
+            update_message = '(Hello, %s. Unfortunately, time cannot move backward)' %(enter_name)
+            return render_template('select_time.html', message = update_message) 
         # Here, we assign `update_message' to `message', which means
         # we'll refer to it in our template as `message'
         return render_template('select_time.html', message = update_message)
