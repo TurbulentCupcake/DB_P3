@@ -54,7 +54,8 @@ urls = ('/currtime', 'curr_time',
         '/selecttime', 'select_time',
         '/', 'app_base',
         '/add_bid', 'add_bid',
-        '/search', 'search'
+        '/search', 'search',
+        '/show_item','show_item'
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
@@ -64,6 +65,48 @@ class app_base:
     def GET(self):
         return render_template('app_base.html')
 
+class show_item:
+
+    def GET(self):
+        return render_template('show_item.html')
+
+
+    def POST(self):
+        post_params = web.input()
+        itemID = post_params['itemID']
+        # get the item
+        tempItem = sqlitedb.getItemById(itemID)
+
+        # the item attributes are already present
+
+        # get the categories for the item
+        tempItem['Categories'] = sqlitedb.getCategory(itemID)
+
+        # determine the auctions open/close status
+            # check if the item is still open
+        if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())):
+            tempItem['Status'] = 'Open'
+        # check if the item is closed
+        elif (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
+            tempItem['Status'] = 'Close'
+        # check if the auction for the item has not started
+        elif string_to_time(tempItem['Started']) > string_to_time(sqlitedb.getTime()):
+            tempItem['Status'] = 'Not Started'
+
+        # determine winner if the auction is closed, determine bids if auction is open
+        if tempItem['Status'] == 'Close':
+            win = sqlitedb.getAuctionWinner(itemID)
+            tempItem['Winner'] = win
+        
+        bids = sqlitedb.getBids(itemID)
+        bidderList = ""
+        for b in bids:
+            bidderList += "Bidder: " + b['UserID'] + " --- Price: " + str(b['Amount']) + " --- Time of Bid: " + b['Time'] + '  |  '
+        tempItem['Bids'] = bidderList
+
+        results = [tempItem]
+
+        return render_template('show_item.html', search_result = results)
 
 class add_bid:
 
@@ -71,8 +114,8 @@ class add_bid:
     def GET(self):
         return render_template('add_bid.html')
 
-    # add bids
     def POST(self):
+
         post_params = web.input()
         userID = post_params['userID']
         price = post_params['price']

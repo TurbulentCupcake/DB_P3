@@ -77,7 +77,6 @@ def addBid(itemID, userID, price):
 
 ################################################################################
 
-
 def getCurrently(itemID):
     """
     Returns the currently value for a given item
@@ -101,6 +100,22 @@ def getCategory(itemID):
     q_string = 'select Category from Categories where ItemID = $itemID;'
     result = query(q_string, {'itemID': itemID})
     return result[0]['Category']
+
+def getAuctionWinner(itemID):
+    """
+    Returns the winner of a closed bid
+    """
+    q_string = 'select UserID from Bids where ItemID = $itemID order by Amount desc limit 1;'
+    result = query(q_string, {'itemID': itemID})
+    return result[0]['UserID']
+
+def getBids(itemID):
+    """
+    Returns current bids on an open auction
+    """
+    q_string = 'select UserID, Amount, Time from Bids where ItemID = $itemID;'
+    result = query(q_string, {'itemID': itemID})
+    return result
 
 ##################################################################################
 
