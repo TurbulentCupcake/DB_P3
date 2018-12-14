@@ -61,3 +61,21 @@ def setTime(time):
     query_string = 'UPDATE CurrentTime SET Time = $time'
     db.query(query_string, {'time': time})
     return
+
+def addBid(itemID, userID, price):
+    # obtain time
+    q_string = 'select Time from CurrentTime'
+    time = db.query(q_string)[0]['Time']
+    print(time)
+    q_string = 'INSERT INTO Bids (ItemID, UserID, Amount, Time) VALUES ($itemID, $userID, $price, $time);'
+    query(q_string, {'itemID': itemID, 'userID': userID, 'price': price, 'time': time })
+    return
+
+
+# def addBid(itemID, userID, price):
+#     # the correct column and table name in your database
+#     query_string = 'SELECT Time FROM CurrentTime'
+#     time = db.query(query_string)[0]['Time']
+#     result = query(query_string, {'itemID': itemID, 'userID': userID, 'price': price, 'time': time})
+#     # alternatively: return results[0]['currenttime']
+#     return result

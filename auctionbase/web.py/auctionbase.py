@@ -52,10 +52,44 @@ def render_template(template_name, **context):
 
 urls = ('/currtime', 'curr_time',
         '/selecttime', 'select_time',
+        '/', 'app_base',
+        '/add_bid', 'add_bid',
+        '/search', 'search'
         # TODO: add additional URLs here
         # first parameter => URL, second parameter => class name
         )
 
+class app_base:
+
+    def GET(self):
+        return render_template('app_base.html')
+
+class add_bid:
+
+    # display add bid page
+    def GET(self):
+        return render_template('add_bid.html')
+
+    # add bids
+    def POST(self):
+        post_params = web.input()
+        userID = post_params['userID']
+        price = post_params['price']
+        itemID = post_params['itemID']
+        try:
+            sqlitedb.addBid(itemID, userID, price)
+            update_message = 'Bid successfully added'
+            return render_template('add_bid.html',  add_result = True)
+        except TypeError: # workaround because TypeError on date is not iterable but adds to bids 
+            update_message = 'Bid successfully added'
+            return render_template('add_bid.html',  add_result = True)
+        except Exception as ex:
+            print(ex)
+            update_message = 'Bid addition failed'
+            return render_template('add_bid.html', add_result = False)
+            
+        
+     
 class curr_time:
     # A simple GET request, to '/currtime'
     #
