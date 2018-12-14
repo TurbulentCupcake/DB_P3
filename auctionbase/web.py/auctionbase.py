@@ -64,6 +64,7 @@ class app_base:
     def GET(self):
         return render_template('app_base.html')
 
+
 class add_bid:
 
     # display add bid page
@@ -80,7 +81,7 @@ class add_bid:
             sqlitedb.addBid(itemID, userID, price)
             update_message = 'Bid successfully added'
             return render_template('add_bid.html',  add_result = True)
-        except TypeError: # workaround because TypeError on date is not iterable but adds to bids 
+        except TypeError: # workaround because TypeError on date is not iterable but for some reason still adds to bids 
             update_message = 'Bid successfully added'
             return render_template('add_bid.html',  add_result = True)
         except Exception as ex:
@@ -88,8 +89,107 @@ class add_bid:
             update_message = 'Bid addition failed'
             return render_template('add_bid.html', add_result = False)
             
+
+class search:
+
+    def GET(self):
+        return render_template('search.html')       
+
+    def POST(self):
+
+        post_params = web.input()
+        status = post_params['status'] # - 
+        itemID = post_params['itemID'] # - 
+        minPrice = post_params['minPrice'] # - 
+        maxPrice = post_params['maxPrice'] # - 
+        category = post_params['category'] # - 
+        description = post_params['description'] # -
+        userID = post_params['userID'] 
+
+        results = []
+        # narrow down search results based on status
+        statusSearch_Temp = sqlitedb.searchOnStatus(status)
+        # print(statusSearch_Temp)
+        statusSearchResults = set() # statusSearchResults contains a bunch of Ids
+        for r in statusSearch_Temp: 
+            statusSearchResults.add(r['ItemID'])
         
-     
+        # Filter by ItemID
+        if itemID != '':
+            itemIDSearch_Temp = sqlitedb.searchOnItemID(itemID)
+            itemIDSearchResults = set()
+            for r in itemIDSearch_Temp:
+                itemIDSearchResults.add(r['ItemID'])
+            statusSearchResults = statusSearchResults.intersection(itemIDSearchResults)
+            # print(itemIDSearchResults)
+
+        if userID != '':
+            userIDSearch_Temp = sqlitedb.searchOnUserID(userID)
+            userIDSearchResults = set()
+            for r in userIDSearch_Temp:
+                userIDSearchResults.add(r['ItemID'])
+            statusSearchResults = statusSearchResults.intersection(userIDSearchResults)
+        
+        # Filter by minPrice
+        if minPrice != '':
+            minPrice_Temp = sqlitedb.searchOnMinPrice(minPrice)
+            minPriceSearchResults = set()
+            for r in minPrice_Temp:
+                minPriceSearchResults.add(r['ItemID'])
+            statusSearchResults = statusSearchResults.intersection(minPriceSearchResults)
+        
+        # filter by maxPrice
+        if maxPrice != '':
+            maxPrice_Temp = sqlitedb.searchOnMaxPrice(maxPrice)
+            maxPriceSearchResults = set()
+            for r in maxPrice_Temp:
+                maxPriceSearchResults.add(r['ItemID'])
+            statusSearchResults = statusSearchResults.intersection(maxPriceSearchResults)
+        
+        # filter by Category
+        if category != '':
+            category_Temp = sqlitedb.searchOnCategory(category)
+            categorySearchResults = set()
+            for r in category_Temp:
+                categorySearchResults.add(r['ItemID'])
+            statusSearchResults = statusSearchResults.intersection(categorySearchResults)
+        
+        # filter by description
+        if description != '':
+            description = '%'+description+'%'
+            description_Temp = sqlitedb.searchOnDescription(description)
+            descriptionSearchResults = set()
+            for r in description_Temp:
+                descriptionSearchResults.add(r['ItemID'])
+            statusSearchResults = statusSearchResults.intersection(descriptionSearchResults)
+
+        # print(statusSearchResults)
+
+        final_items = []
+
+        # iterate through the items
+        for i, item in enumerate(statusSearchResults):
+            tempItem = sqlitedb.getItemById(item) # obtain the item
+
+            # check if the item is still open
+            if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())):
+                tempItem['Status'] = 'Open'
+            # check if the item is closed
+            elif (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
+                tempItem['Status'] = 'Close'
+            # check if the auction for the item has not started
+            elif string_to_time(tempItem['Started']) > string_to_time(sqlitedb.getTime()):
+                tempItem['Status'] = 'Not Started'
+            
+            # obtain categories for the item
+            tempItem['Categories'] = sqlitedb.getCategory(item)
+
+            final_items.append(tempItem)
+            
+        return render_template('search.html', search_result = final_items)
+
+ 
+
 class curr_time:
     # A simple GET request, to '/currtime'
     #
