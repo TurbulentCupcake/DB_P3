@@ -45,13 +45,16 @@
 {% if search_result %}
 {% for result in search_result %}
 	{% for key in result %}
-		<div>
-			<span>{{ key|e }}</span>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<span>{{ result[key]|e }}</span>
-		</div>
+		{% if key != 'href' %}
+			<div>
+				<span>{{ key|e }}</span>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<span>{{ result[key]|e }}</span>
+			</div>
+		{%endif%}
   	{% endfor %}
-  	<div>--------</div>
+		<a href="{{ result['href']|e }}"> Link to item {{ result['ItemID']}} </a>
+		<div>--------</div>
 {% endfor %}
 {% else %}
 <div>No results</div>
