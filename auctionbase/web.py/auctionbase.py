@@ -80,10 +80,10 @@ class show_item:
 
         # determine the auctions open/close status
             # check if the item is still open
-        if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())):
+        if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) and (tempItem['Buy_Price'] > tempItem['Currently']):
             tempItem['Status'] = 'Open'
         # check if the item is closed
-        elif (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
+        elif (string_to_time(tempItem['Ends']) < string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
             tempItem['Status'] = 'Close'
         # check if the auction for the item has not started
         elif string_to_time(tempItem['Started']) > string_to_time(sqlitedb.getTime()):
@@ -91,13 +91,20 @@ class show_item:
 
         # determine winner if the auction is closed, determine bids if auction is open
         if tempItem['Status'] == 'Close':
-            win = sqlitedb.getAuctionWinner(itemID)
-            tempItem['Winner'] = win
+            try:
+                win = sqlitedb.getAuctionWinner(itemID)
+                tempItem['Winner'] = win
+            except:
+                tempItem['Winner'] = "No Winners"
         
         bids = sqlitedb.getBids(itemID)
-        bidderList = ""
+        bidderList = []
         for b in bids:
-            bidderList += "Bidder: " + b['UserID'] + " --- Price: " + str(b['Amount']) + " --- Time of Bid: " + b['Time'] + '  |  '
+            bidderList.append({ 'UserID': b['UserID'],
+                                'Amount': b['Amount'],
+                                'Time': b['Time']    
+            })
+            # bidderList.append() "Bidder: " + b['UserID'] + " , Price: " + str(b['Amount']) + " --- Time of Bid: " + b['Time'] + '  |  '
         tempItem['Bids'] = bidderList
 
         results = [tempItem]
@@ -121,10 +128,10 @@ class show_item:
 
         # determine the auctions open/close status
             # check if the item is still open
-        if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())):
+        if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) and (tempItem['Buy_Price'] > tempItem['Currently']):
             tempItem['Status'] = 'Open'
         # check if the item is closed
-        elif (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
+        elif (string_to_time(tempItem['Ends']) < string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
             tempItem['Status'] = 'Close'
         # check if the auction for the item has not started
         elif string_to_time(tempItem['Started']) > string_to_time(sqlitedb.getTime()):
@@ -157,6 +164,15 @@ class add_bid:
         userID = post_params['userID']
         price = post_params['price']
         itemID = post_params['itemID']
+
+        # check the bid price position
+
+        item = sqlitedb.getItemById(itemID)
+
+        if (sqlitedb.getTime() > item['Ends']) or (item['Currently'] >= item['Buy_Price']):
+            return render_template('add_bid.html', add_result = False)
+
+
         try:
             sqlitedb.addBid(itemID, userID, price)
             update_message = 'Bid successfully added'
@@ -252,10 +268,10 @@ class search:
             tempItem = sqlitedb.getItemById(item) # obtain the item
 
             # check if the item is still open
-            if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())):
+            if (string_to_time(tempItem['Started']) <= string_to_time(sqlitedb.getTime())) and (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) and (tempItem['Buy_Price'] > tempItem['Currently']):
                 tempItem['Status'] = 'Open'
             # check if the item is closed
-            elif (string_to_time(tempItem['Ends']) >= string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
+            elif (string_to_time(tempItem['Ends']) < string_to_time(sqlitedb.getTime())) or (tempItem['Buy_Price'] <= tempItem['Currently']):
                 tempItem['Status'] = 'Close'
             # check if the auction for the item has not started
             elif string_to_time(tempItem['Started']) > string_to_time(sqlitedb.getTime()):

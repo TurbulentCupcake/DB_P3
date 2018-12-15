@@ -122,7 +122,7 @@ def getBids(itemID):
 def searchOnStatus(status):
     # An open status implies that the current time is greater than the  starting time and less than the end time
     if status == 'open':
-        q_string = 'select ItemID from Items, CurrentTime where CurrentTime.Time > Items.Started and CurrentTime.Time < Items.Ends;'
+        q_string = 'select ItemID from Items, CurrentTime where CurrentTime.Time > Items.Started and CurrentTime.Time < Items.Ends and Items.Currently < Items.Buy_Price;'
     elif status == 'close': # A close status implies that the current time is greater than the bid and the currently value on the item is greater than or equal the buy price
         q_string = 'select ItemID from Items, CurrentTime where CurrentTime.Time > Items.Ends or Items.Currently >= Items.Buy_Price;'
     elif status == 'notStarted': # this implies that the current time is before the started time

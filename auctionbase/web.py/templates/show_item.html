@@ -21,7 +21,19 @@
 		<div>
 			<span>{{ key|e }}</span>
 			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			<span>{{ result[key]|e }}</span>
+			{% if key == 'Bids' %}
+				<table style="width:100%">
+					{% for b in result[key] %}
+						<tr>
+							<th>{{ b['UserID'] }}</th>
+							<th>{{ b['Amount'] }}</th>
+							<th>{{ b['Time'] }}</th>
+						</tr>
+					{% endfor %}
+				</table>
+			{% else %}
+				<span>{{ result[key]|e }}</span>
+			{% endif %}
 		</div>
 		{% endfor %}
 {% endfor %}
